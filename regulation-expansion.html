@@ -47,7 +47,7 @@
             border-radius: 8px;
             box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
             z-index: 1000;
-            min-width: 250px;
+            min-width: auto;
             max-height: 90vh;
             overflow-y: auto;
         }
@@ -171,10 +171,10 @@
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
             <h3 style="margin: 0;">Export Options</h3>
             <button onclick="toggleControls()" style="background: none; border: 1px solid #475569; color: #94a3b8; padding: 4px 8px; border-radius: 4px; cursor: pointer; font-size: 12px;">
-                <span id="toggle-text">Hide</span>
+                <span id="toggle-text">Show</span>
             </button>
         </div>
-        <div id="controls-content">
+        <div id="controls-content" style="display: none;">
 
         <div class="control-group">
             <label for="filename">Filename</label>
