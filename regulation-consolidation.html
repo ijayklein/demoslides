@@ -249,7 +249,7 @@
 
                 <style>
                     @keyframes flowUp {
-                        to { stroke-dashoffset: 30; }
+                        to { stroke-dashoffset: -30; }
                     }
                     .flow-line {
                         stroke-dasharray: 10 5;
@@ -259,27 +259,24 @@
             </defs>
 
             <!-- Connection Lines - Flowing Upward -->
-            <!-- Level 3 to Level 2 - Consolidating -->
-            <line x1="120" y1="555" x2="180" y2="465" stroke="#06b6d4" stroke-width="4" class="flow-line" opacity="0.8" marker-end="url(#arrowUp)"/>
+            <!-- FADED LINES (not in active path) -->
+            <g opacity="0.2">
+                <line x1="120" y1="555" x2="180" y2="465" stroke="#06b6d4" stroke-width="4" class="flow-line" marker-end="url(#arrowUp)"/>
+                <line x1="540" y1="555" x2="540" y2="465" stroke="#06b6d4" stroke-width="4" class="flow-line" marker-end="url(#arrowUp)"/>
+                <line x1="420" y1="405" x2="300" y2="315" stroke="#06b6d4" stroke-width="4" class="flow-line" marker-end="url(#arrowUp)"/>
+                <line x1="540" y1="405" x2="600" y2="315" stroke="#06b6d4" stroke-width="4" class="flow-line" marker-end="url(#arrowUp)"/>
+                <line x1="720" y1="405" x2="600" y2="315" stroke="#06b6d4" stroke-width="4" class="flow-line" marker-end="url(#arrowUp)"/>
+                <line x1="900" y1="405" x2="900" y2="315" stroke="#06b6d4" stroke-width="4" class="flow-line" marker-end="url(#arrowUp)"/>
+                <line x1="600" y1="255" x2="600" y2="175" stroke="#06b6d4" stroke-width="4" class="flow-line" marker-end="url(#arrowUp)"/>
+                <line x1="900" y1="255" x2="600" y2="175" stroke="#06b6d4" stroke-width="4" class="flow-line" marker-end="url(#arrowUp)"/>
+            </g>
+
+            <!-- ACTIVE PATH: R301.1.1.2 → R301.1.1 → R301.1 → R301 -->
             <line x1="270" y1="555" x2="180" y2="465" stroke="#06b6d4" stroke-width="4" class="flow-line" opacity="0.8" marker-end="url(#arrowUp)"/>
-
-            <line x1="540" y1="555" x2="540" y2="465" stroke="#06b6d4" stroke-width="4" class="flow-line" opacity="0.8" marker-end="url(#arrowUp)"/>
-
-            <!-- Level 2 to Level 1 - Consolidating -->
             <line x1="180" y1="405" x2="300" y2="315" stroke="#06b6d4" stroke-width="4" class="flow-line" opacity="0.8" marker-end="url(#arrowUp)"/>
-            <line x1="420" y1="405" x2="300" y2="315" stroke="#06b6d4" stroke-width="4" class="flow-line" opacity="0.8" marker-end="url(#arrowUp)"/>
-
-            <line x1="540" y1="405" x2="600" y2="315" stroke="#06b6d4" stroke-width="4" class="flow-line" opacity="0.8" marker-end="url(#arrowUp)"/>
-            <line x1="720" y1="405" x2="600" y2="315" stroke="#06b6d4" stroke-width="4" class="flow-line" opacity="0.8" marker-end="url(#arrowUp)"/>
-
-            <line x1="900" y1="405" x2="900" y2="315" stroke="#06b6d4" stroke-width="4" class="flow-line" opacity="0.8" marker-end="url(#arrowUp)"/>
-
-            <!-- Level 1 to Root - Consolidating -->
             <line x1="300" y1="255" x2="600" y2="175" stroke="#06b6d4" stroke-width="4" class="flow-line" opacity="0.8" marker-end="url(#arrowUp)"/>
-            <line x1="600" y1="255" x2="600" y2="175" stroke="#06b6d4" stroke-width="4" class="flow-line" opacity="0.8" marker-end="url(#arrowUp)"/>
-            <line x1="900" y1="255" x2="600" y2="175" stroke="#06b6d4" stroke-width="4" class="flow-line" opacity="0.8" marker-end="url(#arrowUp)"/>
 
-            <!-- ROOT NODE: R301 -->
+            <!-- ROOT NODE: R301 - ACTIVE -->
             <g>
                 <rect x="540" y="115" width="120" height="60" rx="8" fill="url(#boxGradient1)" stroke="#60a5fa" stroke-width="4">
                     <animate attributeName="stroke-opacity" values="0.4;1;0.4" dur="2s" repeatCount="indefinite"/>
@@ -290,40 +287,58 @@
             </g>
 
             <!-- LEVEL 1: Primary Subdivisions -->
-            <rect x="240" y="255" width="120" height="60" rx="8" fill="url(#boxGradient2)" stroke="#a78bfa" stroke-width="2"/>
-            <text x="300" y="290" font-family="Arial, sans-serif" font-size="16" font-weight="bold" text-anchor="middle" fill="#ffffff">R301.1</text>
+            <!-- R301.1 - ACTIVE -->
+            <g>
+                <rect x="240" y="255" width="120" height="60" rx="8" fill="url(#boxGradient2)" stroke="#a78bfa" stroke-width="2"/>
+                <text x="300" y="290" font-family="Arial, sans-serif" font-size="16" font-weight="bold" text-anchor="middle" fill="#ffffff">R301.1</text>
+            </g>
 
-            <rect x="540" y="255" width="120" height="60" rx="8" fill="url(#boxGradient2)" stroke="#a78bfa" stroke-width="2"/>
-            <text x="600" y="290" font-family="Arial, sans-serif" font-size="16" font-weight="bold" text-anchor="middle" fill="#ffffff">R301.2</text>
+            <!-- FADED Level 1 boxes -->
+            <g opacity="0.3">
+                <rect x="540" y="255" width="120" height="60" rx="8" fill="url(#boxGradient2)" stroke="#a78bfa" stroke-width="2"/>
+                <text x="600" y="290" font-family="Arial, sans-serif" font-size="16" font-weight="bold" text-anchor="middle" fill="#ffffff">R301.2</text>
 
-            <rect x="840" y="255" width="120" height="60" rx="8" fill="url(#boxGradient2)" stroke="#a78bfa" stroke-width="2"/>
-            <text x="900" y="290" font-family="Arial, sans-serif" font-size="16" font-weight="bold" text-anchor="middle" fill="#ffffff">R301.3</text>
+                <rect x="840" y="255" width="120" height="60" rx="8" fill="url(#boxGradient2)" stroke="#a78bfa" stroke-width="2"/>
+                <text x="900" y="290" font-family="Arial, sans-serif" font-size="16" font-weight="bold" text-anchor="middle" fill="#ffffff">R301.3</text>
+            </g>
 
             <!-- LEVEL 2: Secondary Subdivisions -->
-            <rect x="120" y="405" width="120" height="60" rx="8" fill="url(#boxGradient3)" stroke="#f472b6" stroke-width="2"/>
-            <text x="180" y="440" font-family="Arial, sans-serif" font-size="14" font-weight="bold" text-anchor="middle" fill="#ffffff">R301.1.1</text>
+            <!-- R301.1.1 - ACTIVE -->
+            <g>
+                <rect x="120" y="405" width="120" height="60" rx="8" fill="url(#boxGradient3)" stroke="#f472b6" stroke-width="2"/>
+                <text x="180" y="440" font-family="Arial, sans-serif" font-size="14" font-weight="bold" text-anchor="middle" fill="#ffffff">R301.1.1</text>
+            </g>
 
-            <rect x="360" y="405" width="120" height="60" rx="8" fill="url(#boxGradient3)" stroke="#f472b6" stroke-width="2"/>
-            <text x="420" y="440" font-family="Arial, sans-serif" font-size="14" font-weight="bold" text-anchor="middle" fill="#ffffff">R301.1.2</text>
+            <!-- FADED Level 2 boxes -->
+            <g opacity="0.3">
+                <rect x="360" y="405" width="120" height="60" rx="8" fill="url(#boxGradient3)" stroke="#f472b6" stroke-width="2"/>
+                <text x="420" y="440" font-family="Arial, sans-serif" font-size="14" font-weight="bold" text-anchor="middle" fill="#ffffff">R301.1.2</text>
 
-            <rect x="480" y="405" width="120" height="60" rx="8" fill="url(#boxGradient3)" stroke="#f472b6" stroke-width="2"/>
-            <text x="540" y="440" font-family="Arial, sans-serif" font-size="14" font-weight="bold" text-anchor="middle" fill="#ffffff">R301.2.1</text>
+                <rect x="480" y="405" width="120" height="60" rx="8" fill="url(#boxGradient3)" stroke="#f472b6" stroke-width="2"/>
+                <text x="540" y="440" font-family="Arial, sans-serif" font-size="14" font-weight="bold" text-anchor="middle" fill="#ffffff">R301.2.1</text>
 
-            <rect x="660" y="405" width="120" height="60" rx="8" fill="url(#boxGradient3)" stroke="#f472b6" stroke-width="2"/>
-            <text x="720" y="440" font-family="Arial, sans-serif" font-size="14" font-weight="bold" text-anchor="middle" fill="#ffffff">R301.2.2</text>
+                <rect x="660" y="405" width="120" height="60" rx="8" fill="url(#boxGradient3)" stroke="#f472b6" stroke-width="2"/>
+                <text x="720" y="440" font-family="Arial, sans-serif" font-size="14" font-weight="bold" text-anchor="middle" fill="#ffffff">R301.2.2</text>
 
-            <rect x="840" y="405" width="120" height="60" rx="8" fill="url(#boxGradient3)" stroke="#f472b6" stroke-width="2"/>
-            <text x="900" y="440" font-family="Arial, sans-serif" font-size="14" font-weight="bold" text-anchor="middle" fill="#ffffff">R301.3.1</text>
+                <rect x="840" y="405" width="120" height="60" rx="8" fill="url(#boxGradient3)" stroke="#f472b6" stroke-width="2"/>
+                <text x="900" y="440" font-family="Arial, sans-serif" font-size="14" font-weight="bold" text-anchor="middle" fill="#ffffff">R301.3.1</text>
+            </g>
 
             <!-- LEVEL 3: Tertiary Subdivisions -->
-            <rect x="60" y="555" width="120" height="60" rx="8" fill="url(#boxGradient4)" stroke="#fbbf24" stroke-width="2"/>
-            <text x="120" y="590" font-family="Arial, sans-serif" font-size="12" font-weight="bold" text-anchor="middle" fill="#ffffff">R301.1.1.1</text>
+            <!-- R301.1.1.2 - ACTIVE -->
+            <g>
+                <rect x="210" y="555" width="120" height="60" rx="8" fill="url(#boxGradient4)" stroke="#fbbf24" stroke-width="2"/>
+                <text x="270" y="590" font-family="Arial, sans-serif" font-size="12" font-weight="bold" text-anchor="middle" fill="#ffffff">R301.1.1.2</text>
+            </g>
 
-            <rect x="210" y="555" width="120" height="60" rx="8" fill="url(#boxGradient4)" stroke="#fbbf24" stroke-width="2"/>
-            <text x="270" y="590" font-family="Arial, sans-serif" font-size="12" font-weight="bold" text-anchor="middle" fill="#ffffff">R301.1.1.2</text>
+            <!-- FADED Level 3 boxes -->
+            <g opacity="0.3">
+                <rect x="60" y="555" width="120" height="60" rx="8" fill="url(#boxGradient4)" stroke="#fbbf24" stroke-width="2"/>
+                <text x="120" y="590" font-family="Arial, sans-serif" font-size="12" font-weight="bold" text-anchor="middle" fill="#ffffff">R301.1.1.1</text>
 
-            <rect x="480" y="555" width="120" height="60" rx="8" fill="url(#boxGradient4)" stroke="#fbbf24" stroke-width="2"/>
-            <text x="540" y="590" font-family="Arial, sans-serif" font-size="12" font-weight="bold" text-anchor="middle" fill="#ffffff">R301.2.1.1</text>
+                <rect x="480" y="555" width="120" height="60" rx="8" fill="url(#boxGradient4)" stroke="#fbbf24" stroke-width="2"/>
+                <text x="540" y="590" font-family="Arial, sans-serif" font-size="12" font-weight="bold" text-anchor="middle" fill="#ffffff">R301.2.1.1</text>
+            </g>
 
             <!-- Legend -->
             <g>
