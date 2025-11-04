@@ -285,7 +285,30 @@
                         stroke-dasharray: 10 5;
                         animation: flowUp 1.5s linear infinite;
                     }
+                    @keyframes highlight {
+                        0%, 100% {
+                            filter: none;
+                            transform: scale(1);
+                        }
+                        50% {
+                            filter: drop-shadow(0 0 15px currentColor) brightness(1.4);
+                            transform: scale(1.05);
+                        }
+                    }
+                    .highlight-block {
+                        animation: highlight 0.5s ease-in-out;
+                        transform-origin: center;
+                    }
                 </style>
+
+                <!-- Glow filter for highlighting -->
+                <filter id="highlightGlow" x="-50%" y="-50%" width="200%" height="200%">
+                    <feGaussianBlur stdDeviation="5" result="coloredBlur"/>
+                    <feMerge>
+                        <feMergeNode in="coloredBlur"/>
+                        <feMergeNode in="SourceGraphic"/>
+                    </feMerge>
+                </filter>
             </defs>
 
             <!-- Connection Lines - Flowing Upward -->
@@ -308,19 +331,26 @@
 
             <!-- ROOT NODE: R301 - ACTIVE -->
             <g>
-                <rect x="540" y="115" width="120" height="60" rx="8" fill="url(#boxGradient1)" stroke="#60a5fa" stroke-width="4">
-                    <animate attributeName="stroke-opacity" values="0.4;1;0.4" dur="2s" repeatCount="indefinite"/>
+                <rect x="540" y="115" width="120" height="60" rx="8" fill="url(#boxGradient1)" stroke="#60a5fa" stroke-width="4" filter="url(#highlightGlow)">
+                    <animate attributeName="opacity" values="1;1;1;1;1.5;1;1" keyTimes="0;0.125;0.25;0.375;0.5;0.5;1" dur="4s" repeatCount="indefinite"/>
+                    <animate attributeName="stroke-width" values="4;4;4;4;8;4;4" keyTimes="0;0.125;0.25;0.375;0.5;0.5;1" dur="4s" repeatCount="indefinite"/>
                 </rect>
                 <text x="600" y="150" font-family="Arial, sans-serif" font-size="20" font-weight="bold" text-anchor="middle" fill="#ffffff">
                     R301
+                    <animate attributeName="opacity" values="1;1;1;1;1.8;1;1" keyTimes="0;0.125;0.25;0.375;0.5;0.5;1" dur="4s" repeatCount="indefinite"/>
                 </text>
             </g>
 
             <!-- LEVEL 1: Primary Subdivisions -->
             <!-- R301.1 - ACTIVE -->
             <g>
-                <rect x="240" y="255" width="120" height="60" rx="8" fill="url(#boxGradient2)" stroke="#a78bfa" stroke-width="2"/>
-                <text x="300" y="290" font-family="Arial, sans-serif" font-size="16" font-weight="bold" text-anchor="middle" fill="#ffffff">R301.1</text>
+                <rect x="240" y="255" width="120" height="60" rx="8" fill="url(#boxGradient2)" stroke="#a78bfa" stroke-width="2" filter="url(#highlightGlow)">
+                    <animate attributeName="opacity" values="1;1;1;1.5;1;1;1" keyTimes="0;0.125;0.25;0.375;0.375;0.5;1" dur="4s" repeatCount="indefinite"/>
+                    <animate attributeName="stroke-width" values="2;2;2;6;2;2;2" keyTimes="0;0.125;0.25;0.375;0.375;0.5;1" dur="4s" repeatCount="indefinite"/>
+                </rect>
+                <text x="300" y="290" font-family="Arial, sans-serif" font-size="16" font-weight="bold" text-anchor="middle" fill="#ffffff">R301.1
+                    <animate attributeName="opacity" values="1;1;1;1.8;1;1;1" keyTimes="0;0.125;0.25;0.375;0.375;0.5;1" dur="4s" repeatCount="indefinite"/>
+                </text>
             </g>
 
             <!-- FADED Level 1 boxes -->
@@ -335,8 +365,13 @@
             <!-- LEVEL 2: Secondary Subdivisions -->
             <!-- R301.1.1 - ACTIVE -->
             <g>
-                <rect x="120" y="405" width="120" height="60" rx="8" fill="url(#boxGradient3)" stroke="#f472b6" stroke-width="2"/>
-                <text x="180" y="440" font-family="Arial, sans-serif" font-size="14" font-weight="bold" text-anchor="middle" fill="#ffffff">R301.1.1</text>
+                <rect x="120" y="405" width="120" height="60" rx="8" fill="url(#boxGradient3)" stroke="#f472b6" stroke-width="2" filter="url(#highlightGlow)">
+                    <animate attributeName="opacity" values="1;1;1.5;1;1;1" keyTimes="0;0.125;0.25;0.25;0.5;1" dur="4s" repeatCount="indefinite"/>
+                    <animate attributeName="stroke-width" values="2;2;6;2;2;2" keyTimes="0;0.125;0.25;0.25;0.5;1" dur="4s" repeatCount="indefinite"/>
+                </rect>
+                <text x="180" y="440" font-family="Arial, sans-serif" font-size="14" font-weight="bold" text-anchor="middle" fill="#ffffff">R301.1.1
+                    <animate attributeName="opacity" values="1;1;1.8;1;1;1" keyTimes="0;0.125;0.25;0.25;0.5;1" dur="4s" repeatCount="indefinite"/>
+                </text>
             </g>
 
             <!-- FADED Level 2 boxes -->
@@ -357,8 +392,13 @@
             <!-- LEVEL 3: Tertiary Subdivisions -->
             <!-- R301.1.1.2 - ACTIVE -->
             <g>
-                <rect x="210" y="555" width="120" height="60" rx="8" fill="url(#boxGradient4)" stroke="#fbbf24" stroke-width="2"/>
-                <text x="270" y="590" font-family="Arial, sans-serif" font-size="12" font-weight="bold" text-anchor="middle" fill="#ffffff">R301.1.1.2</text>
+                <rect x="210" y="555" width="120" height="60" rx="8" fill="url(#boxGradient4)" stroke="#fbbf24" stroke-width="2" filter="url(#highlightGlow)">
+                    <animate attributeName="opacity" values="1;1.5;1;1;1" keyTimes="0;0.125;0.125;0.5;1" dur="4s" repeatCount="indefinite"/>
+                    <animate attributeName="stroke-width" values="2;6;2;2;2" keyTimes="0;0.125;0.125;0.5;1" dur="4s" repeatCount="indefinite"/>
+                </rect>
+                <text x="270" y="590" font-family="Arial, sans-serif" font-size="12" font-weight="bold" text-anchor="middle" fill="#ffffff">R301.1.1.2
+                    <animate attributeName="opacity" values="1;1.8;1;1;1" keyTimes="0;0.125;0.125;0.5;1" dur="4s" repeatCount="indefinite"/>
+                </text>
             </g>
 
             <!-- FADED Level 3 boxes -->
