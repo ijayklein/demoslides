@@ -1,0 +1,625 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <style>
+        body {
+            margin: 0;
+            padding: 20px;
+            background: #0a0e27;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+        }
+
+        #controls {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: rgba(30, 41, 59, 0.95);
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            z-index: 1000;
+            min-width: 250px;
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+
+        #crop-overlay {
+            position: absolute;
+            border: 2px dashed #3b82f6;
+            background: rgba(59, 130, 246, 0.1);
+            cursor: move;
+            display: none;
+            z-index: 100;
+        }
+
+        .crop-handle {
+            position: absolute;
+            width: 10px;
+            height: 10px;
+            background: #3b82f6;
+            border: 2px solid white;
+            cursor: nw-resize;
+        }
+
+        .crop-handle.nw { top: -6px; left: -6px; cursor: nw-resize; }
+        .crop-handle.ne { top: -6px; right: -6px; cursor: ne-resize; }
+        .crop-handle.sw { bottom: -6px; left: -6px; cursor: sw-resize; }
+        .crop-handle.se { bottom: -6px; right: -6px; cursor: se-resize; }
+
+        #controls h3 {
+            margin: 0 0 15px 0;
+            color: #ffffff;
+            font-size: 16px;
+        }
+
+        .control-group {
+            margin-bottom: 15px;
+        }
+
+        .control-group label {
+            display: block;
+            color: #94a3b8;
+            font-size: 12px;
+            margin-bottom: 5px;
+        }
+
+        .control-group select,
+        .control-group input {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #475569;
+            background: #1e293b;
+            color: #ffffff;
+            border-radius: 4px;
+            font-size: 14px;
+        }
+
+        #download-btn {
+            width: 100%;
+            padding: 10px 20px;
+            background: #3b82f6;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 500;
+            transition: all 0.2s;
+        }
+
+        #download-btn:hover {
+            background: #2563eb;
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(59, 130, 246, 0.4);
+        }
+
+        #visualization-container {
+            background: #0a0e27;
+            border-radius: 8px;
+            box-shadow: 0 0 40px rgba(59, 130, 246, 0.2);
+            display: inline-block;
+            position: relative;
+            transform-origin: center;
+            transition: transform 0.2s ease;
+        }
+
+        body.light {
+            background: #f8fafc;
+        }
+
+        body.light #visualization-container {
+            background: #ffffff;
+            box-shadow: 0 0 40px rgba(0, 0, 0, 0.1);
+        }
+
+        body.light #controls {
+            background: rgba(255, 255, 255, 0.95);
+        }
+
+        body.light #controls h3 {
+            color: #1e293b;
+        }
+
+        body.light .control-group label {
+            color: #64748b;
+        }
+
+        body.light .control-group select,
+        body.light .control-group input {
+            background: #f1f5f9;
+            color: #1e293b;
+            border-color: #e2e8f0;
+        }
+    </style>
+</head>
+<body>
+    <div id="controls">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+            <h3 style="margin: 0;">Export Options</h3>
+            <button onclick="toggleControls()" style="background: none; border: 1px solid #475569; color: #94a3b8; padding: 4px 8px; border-radius: 4px; cursor: pointer; font-size: 12px;">
+                <span id="toggle-text">Hide</span>
+            </button>
+        </div>
+        <div id="controls-content">
+
+        <div class="control-group">
+            <label for="filename">Filename</label>
+            <input type="text" id="filename" value="regulation-consolidation" placeholder="Enter filename">
+        </div>
+
+        <div class="control-group">
+            <label for="format">Format</label>
+            <select id="format">
+                <option value="png">PNG (Recommended)</option>
+                <option value="jpeg">JPEG</option>
+                <option value="webp">WebP</option>
+                <option value="svg">SVG (Vector)</option>
+            </select>
+        </div>
+
+        <div class="control-group">
+            <label for="scale">Resolution Scale</label>
+            <select id="scale">
+                <option value="1">1x - Web (1200x900)</option>
+                <option value="2">2x - Retina (2400x1800)</option>
+                <option value="3" selected>3x - High DPI (3600x2700)</option>
+                <option value="4">4x - Print (4800x3600)</option>
+            </select>
+        </div>
+
+        <div class="control-group">
+            <label for="quality">Quality (JPEG only)</label>
+            <input type="range" id="quality" min="0.1" max="1" step="0.1" value="0.9">
+            <small style="color: #64748b; font-size: 11px;">90%</small>
+        </div>
+
+        <div class="control-group">
+            <label for="rotation">Rotation (degrees)</label>
+            <input type="range" id="rotation" min="0" max="360" step="1" value="0" oninput="updateRotation()">
+            <small style="color: #64748b; font-size: 11px;">0°</small>
+        </div>
+
+        <div class="control-group">
+            <label for="scale-transform">Scale (%)</label>
+            <input type="range" id="scale-transform" min="25" max="200" step="5" value="100" oninput="updateScale()">
+            <small style="color: #64748b; font-size: 11px;">100%</small>
+        </div>
+
+        <div class="control-group">
+            <button onclick="toggleCrop()" id="crop-btn" style="width: 100%; padding: 8px; background: #059669; color: white; border: none; border-radius: 4px; cursor: pointer; margin-bottom: 10px;">Enable Crop</button>
+            <button onclick="resetCrop()" style="width: 100%; padding: 8px; background: #dc2626; color: white; border: none; border-radius: 4px; cursor: pointer;">Reset Crop</button>
+        </div>
+
+        <div class="control-group">
+            <label for="theme">Preview Theme</label>
+            <select id="theme" onchange="changeTheme()">
+                <option value="dark">Dark</option>
+                <option value="light">Light</option>
+            </select>
+        </div>
+
+        <button id="download-btn" onclick="downloadVisualization()">Download</button>
+        </div>
+    </div>
+
+    <div id="visualization-container">
+        <div id="crop-overlay">
+            <div class="crop-handle nw"></div>
+            <div class="crop-handle ne"></div>
+            <div class="crop-handle sw"></div>
+            <div class="crop-handle se"></div>
+        </div>
+        <svg id="visualization" width="1200" height="900" viewBox="0 0 1200 900" xmlns="http://www.w3.org/2000/svg">
+            <!-- Background -->
+            <rect width="1200" height="900" fill="#0a0e27"/>
+
+            <!-- Title -->
+            <text x="600" y="40" font-family="Arial, sans-serif" font-size="28" font-weight="bold" text-anchor="middle" fill="#ffffff">
+                Regulation Code Consolidation
+            </text>
+            <text x="600" y="70" font-family="Arial, sans-serif" font-size="16" text-anchor="middle" fill="#06b6d4">
+                Flow: Bottom → Up | Many codes collapse into one
+            </text>
+
+            <defs>
+                <linearGradient id="boxGradient1" x1="0%" y1="0%" x2="0%" y2="100%">
+                    <stop offset="0%" style="stop-color:#3b82f6;stop-opacity:1" />
+                    <stop offset="100%" style="stop-color:#1e40af;stop-opacity:1" />
+                </linearGradient>
+                <linearGradient id="boxGradient2" x1="0%" y1="0%" x2="0%" y2="100%">
+                    <stop offset="0%" style="stop-color:#8b5cf6;stop-opacity:1" />
+                    <stop offset="100%" style="stop-color:#5b21b6;stop-opacity:1" />
+                </linearGradient>
+                <linearGradient id="boxGradient3" x1="0%" y1="0%" x2="0%" y2="100%">
+                    <stop offset="0%" style="stop-color:#ec4899;stop-opacity:1" />
+                    <stop offset="100%" style="stop-color:#be185d;stop-opacity:1" />
+                </linearGradient>
+                <linearGradient id="boxGradient4" x1="0%" y1="0%" x2="0%" y2="100%">
+                    <stop offset="0%" style="stop-color:#f59e0b;stop-opacity:1" />
+                    <stop offset="100%" style="stop-color:#d97706;stop-opacity:1" />
+                </linearGradient>
+
+                <marker id="arrowUp" markerWidth="6" markerHeight="6" refX="3" refY="3" orient="auto-start-reverse">
+                    <polygon points="1 5, 3 1, 5 5" fill="#06b6d4" />
+                </marker>
+
+                <style>
+                    @keyframes flowUp {
+                        to { stroke-dashoffset: 30; }
+                    }
+                    .flow-line {
+                        stroke-dasharray: 10 5;
+                        animation: flowUp 1.5s linear infinite;
+                    }
+                </style>
+            </defs>
+
+            <!-- Connection Lines - Flowing Upward -->
+            <!-- Level 3 to Level 2 - Consolidating -->
+            <line x1="120" y1="555" x2="180" y2="465" stroke="#06b6d4" stroke-width="4" class="flow-line" opacity="0.8" marker-end="url(#arrowUp)"/>
+            <line x1="270" y1="555" x2="180" y2="465" stroke="#06b6d4" stroke-width="4" class="flow-line" opacity="0.8" marker-end="url(#arrowUp)"/>
+
+            <line x1="540" y1="555" x2="540" y2="465" stroke="#06b6d4" stroke-width="4" class="flow-line" opacity="0.8" marker-end="url(#arrowUp)"/>
+
+            <!-- Level 2 to Level 1 - Consolidating -->
+            <line x1="180" y1="405" x2="300" y2="315" stroke="#06b6d4" stroke-width="4" class="flow-line" opacity="0.8" marker-end="url(#arrowUp)"/>
+            <line x1="420" y1="405" x2="300" y2="315" stroke="#06b6d4" stroke-width="4" class="flow-line" opacity="0.8" marker-end="url(#arrowUp)"/>
+
+            <line x1="540" y1="405" x2="600" y2="315" stroke="#06b6d4" stroke-width="4" class="flow-line" opacity="0.8" marker-end="url(#arrowUp)"/>
+            <line x1="720" y1="405" x2="600" y2="315" stroke="#06b6d4" stroke-width="4" class="flow-line" opacity="0.8" marker-end="url(#arrowUp)"/>
+
+            <line x1="900" y1="405" x2="900" y2="315" stroke="#06b6d4" stroke-width="4" class="flow-line" opacity="0.8" marker-end="url(#arrowUp)"/>
+
+            <!-- Level 1 to Root - Consolidating -->
+            <line x1="300" y1="255" x2="600" y2="175" stroke="#06b6d4" stroke-width="4" class="flow-line" opacity="0.8" marker-end="url(#arrowUp)"/>
+            <line x1="600" y1="255" x2="600" y2="175" stroke="#06b6d4" stroke-width="4" class="flow-line" opacity="0.8" marker-end="url(#arrowUp)"/>
+            <line x1="900" y1="255" x2="600" y2="175" stroke="#06b6d4" stroke-width="4" class="flow-line" opacity="0.8" marker-end="url(#arrowUp)"/>
+
+            <!-- ROOT NODE: R301 -->
+            <g>
+                <rect x="540" y="115" width="120" height="60" rx="8" fill="url(#boxGradient1)" stroke="#60a5fa" stroke-width="4">
+                    <animate attributeName="stroke-opacity" values="0.4;1;0.4" dur="2s" repeatCount="indefinite"/>
+                </rect>
+                <text x="600" y="150" font-family="Arial, sans-serif" font-size="20" font-weight="bold" text-anchor="middle" fill="#ffffff">
+                    R301
+                </text>
+            </g>
+
+            <!-- LEVEL 1: Primary Subdivisions -->
+            <rect x="240" y="255" width="120" height="60" rx="8" fill="url(#boxGradient2)" stroke="#a78bfa" stroke-width="2"/>
+            <text x="300" y="290" font-family="Arial, sans-serif" font-size="16" font-weight="bold" text-anchor="middle" fill="#ffffff">R301.1</text>
+
+            <rect x="540" y="255" width="120" height="60" rx="8" fill="url(#boxGradient2)" stroke="#a78bfa" stroke-width="2"/>
+            <text x="600" y="290" font-family="Arial, sans-serif" font-size="16" font-weight="bold" text-anchor="middle" fill="#ffffff">R301.2</text>
+
+            <rect x="840" y="255" width="120" height="60" rx="8" fill="url(#boxGradient2)" stroke="#a78bfa" stroke-width="2"/>
+            <text x="900" y="290" font-family="Arial, sans-serif" font-size="16" font-weight="bold" text-anchor="middle" fill="#ffffff">R301.3</text>
+
+            <!-- LEVEL 2: Secondary Subdivisions -->
+            <rect x="120" y="405" width="120" height="60" rx="8" fill="url(#boxGradient3)" stroke="#f472b6" stroke-width="2"/>
+            <text x="180" y="440" font-family="Arial, sans-serif" font-size="14" font-weight="bold" text-anchor="middle" fill="#ffffff">R301.1.1</text>
+
+            <rect x="360" y="405" width="120" height="60" rx="8" fill="url(#boxGradient3)" stroke="#f472b6" stroke-width="2"/>
+            <text x="420" y="440" font-family="Arial, sans-serif" font-size="14" font-weight="bold" text-anchor="middle" fill="#ffffff">R301.1.2</text>
+
+            <rect x="480" y="405" width="120" height="60" rx="8" fill="url(#boxGradient3)" stroke="#f472b6" stroke-width="2"/>
+            <text x="540" y="440" font-family="Arial, sans-serif" font-size="14" font-weight="bold" text-anchor="middle" fill="#ffffff">R301.2.1</text>
+
+            <rect x="660" y="405" width="120" height="60" rx="8" fill="url(#boxGradient3)" stroke="#f472b6" stroke-width="2"/>
+            <text x="720" y="440" font-family="Arial, sans-serif" font-size="14" font-weight="bold" text-anchor="middle" fill="#ffffff">R301.2.2</text>
+
+            <rect x="840" y="405" width="120" height="60" rx="8" fill="url(#boxGradient3)" stroke="#f472b6" stroke-width="2"/>
+            <text x="900" y="440" font-family="Arial, sans-serif" font-size="14" font-weight="bold" text-anchor="middle" fill="#ffffff">R301.3.1</text>
+
+            <!-- LEVEL 3: Tertiary Subdivisions -->
+            <rect x="60" y="555" width="120" height="60" rx="8" fill="url(#boxGradient4)" stroke="#fbbf24" stroke-width="2"/>
+            <text x="120" y="590" font-family="Arial, sans-serif" font-size="12" font-weight="bold" text-anchor="middle" fill="#ffffff">R301.1.1.1</text>
+
+            <rect x="210" y="555" width="120" height="60" rx="8" fill="url(#boxGradient4)" stroke="#fbbf24" stroke-width="2"/>
+            <text x="270" y="590" font-family="Arial, sans-serif" font-size="12" font-weight="bold" text-anchor="middle" fill="#ffffff">R301.1.1.2</text>
+
+            <rect x="480" y="555" width="120" height="60" rx="8" fill="url(#boxGradient4)" stroke="#fbbf24" stroke-width="2"/>
+            <text x="540" y="590" font-family="Arial, sans-serif" font-size="12" font-weight="bold" text-anchor="middle" fill="#ffffff">R301.2.1.1</text>
+
+            <!-- Legend -->
+            <g>
+                <text x="50" y="710" font-family="Arial, sans-serif" font-size="16" font-weight="bold" fill="#94a3b8">
+                    Consolidation Pattern:
+                </text>
+                <text x="50" y="740" font-family="Arial, sans-serif" font-size="13" fill="#cbd5e1">
+                    Step 1: Tertiary codes collapse to secondary
+                </text>
+                <text x="70" y="760" font-family="Arial, sans-serif" font-size="12" fill="#94a3b8">
+                    • R301.1.1.1 + R301.1.1.2 merge into R301.1.1
+                </text>
+                <text x="70" y="780" font-family="Arial, sans-serif" font-size="12" fill="#94a3b8">
+                    • R301.2.1.1 consolidates into R301.2.1
+                </text>
+
+                <text x="50" y="810" font-family="Arial, sans-serif" font-size="13" fill="#cbd5e1">
+                    Step 2: Secondary codes collapse to primary
+                </text>
+                <text x="70" y="830" font-family="Arial, sans-serif" font-size="12" fill="#94a3b8">
+                    • R301.1.1 + R301.1.2 merge into R301.1
+                </text>
+                <text x="70" y="850" font-family="Arial, sans-serif" font-size="12" fill="#94a3b8">
+                    • R301.2.1 + R301.2.2 merge into R301.2
+                </text>
+
+                <text x="500" y="740" font-family="Arial, sans-serif" font-size="13" fill="#cbd5e1">
+                    Step 3: Primary codes collapse to root
+                </text>
+                <text x="520" y="760" font-family="Arial, sans-serif" font-size="12" fill="#94a3b8">
+                    • R301.1 + R301.2 + R301.3 merge into R301
+                </text>
+
+                <line x1="500" y1="795" x2="580" y2="795" stroke="#06b6d4" stroke-width="4" class="flow-line" marker-end="url(#arrowUp)"/>
+                <text x="590" y="800" font-family="Arial, sans-serif" font-size="13" fill="#06b6d4">
+                    Consolidation flow direction
+                </text>
+            </g>
+        </svg>
+    </div>
+
+    <script>
+        const config = {
+            defaultFilename: 'regulation-consolidation',
+            defaultFormat: 'png',
+            defaultScale: 3,
+            defaultQuality: 0.9
+        };
+
+        function toggleControls() {
+            const content = document.getElementById('controls-content');
+            const toggleText = document.getElementById('toggle-text');
+            const controls = document.getElementById('controls');
+            if (content.style.display === 'none') {
+                content.style.display = 'block';
+                toggleText.textContent = 'Hide';
+                controls.style.minWidth = '250px';
+            } else {
+                content.style.display = 'none';
+                toggleText.textContent = 'Show';
+                controls.style.minWidth = 'auto';
+            }
+        }
+
+        let cropState = { enabled: false, x: 0, y: 0, width: 0, height: 0, isDragging: false, isResizing: false, dragHandle: null };
+
+        document.getElementById('quality').addEventListener('input', function(e) {
+            e.target.nextElementSibling.textContent = Math.round(e.target.value * 100) + '%';
+        });
+
+        function updateRotation() {
+            const rotation = document.getElementById('rotation').value;
+            document.getElementById('rotation').nextElementSibling.textContent = rotation + '°';
+            updateTransform();
+        }
+
+        function updateScale() {
+            const scale = document.getElementById('scale-transform').value;
+            document.getElementById('scale-transform').nextElementSibling.textContent = scale + '%';
+            updateTransform();
+        }
+
+        function updateTransform() {
+            const rotation = document.getElementById('rotation').value;
+            const scale = document.getElementById('scale-transform').value / 100;
+            document.getElementById('visualization-container').style.transform = `rotate(${rotation}deg) scale(${scale})`;
+        }
+
+        function changeTheme() {
+            document.body.className = document.getElementById('theme').value;
+        }
+
+        function toggleCrop() {
+            const overlay = document.getElementById('crop-overlay');
+            const btn = document.getElementById('crop-btn');
+            if (!cropState.enabled) {
+                cropState.enabled = true;
+                overlay.style.display = 'block';
+                btn.textContent = 'Disable Crop';
+                btn.style.background = '#dc2626';
+                initializeCrop();
+            } else {
+                cropState.enabled = false;
+                overlay.style.display = 'none';
+                btn.textContent = 'Enable Crop';
+                btn.style.background = '#059669';
+            }
+        }
+
+        function initializeCrop() {
+            const container = document.getElementById('visualization-container');
+            const rect = container.getBoundingClientRect();
+            const width = rect.width * 0.5;
+            const height = rect.height * 0.5;
+            cropState.x = (rect.width - width) / 2;
+            cropState.y = (rect.height - height) / 2;
+            cropState.width = width;
+            cropState.height = height;
+            updateCropOverlay();
+        }
+
+        function updateCropOverlay() {
+            const overlay = document.getElementById('crop-overlay');
+            overlay.style.left = cropState.x + 'px';
+            overlay.style.top = cropState.y + 'px';
+            overlay.style.width = cropState.width + 'px';
+            overlay.style.height = cropState.height + 'px';
+        }
+
+        function resetCrop() {
+            if (cropState.enabled) initializeCrop();
+        }
+
+        document.getElementById('crop-overlay').addEventListener('mousedown', function(e) {
+            if (e.target.classList.contains('crop-handle')) {
+                cropState.isResizing = true;
+                cropState.dragHandle = e.target.classList[1];
+            } else {
+                cropState.isDragging = true;
+            }
+            cropState.startX = e.clientX;
+            cropState.startY = e.clientY;
+            cropState.startCropX = cropState.x;
+            cropState.startCropY = cropState.y;
+            cropState.startCropWidth = cropState.width;
+            cropState.startCropHeight = cropState.height;
+            e.preventDefault();
+        });
+
+        document.addEventListener('mousemove', function(e) {
+            if (!cropState.enabled) return;
+            const deltaX = e.clientX - cropState.startX;
+            const deltaY = e.clientY - cropState.startY;
+            const container = document.getElementById('visualization-container');
+            const containerRect = container.getBoundingClientRect();
+
+            if (cropState.isDragging) {
+                cropState.x = Math.max(0, Math.min(containerRect.width - cropState.width, cropState.startCropX + deltaX));
+                cropState.y = Math.max(0, Math.min(containerRect.height - cropState.height, cropState.startCropY + deltaY));
+                updateCropOverlay();
+            } else if (cropState.isResizing) {
+                const handle = cropState.dragHandle;
+                let newX = cropState.startCropX, newY = cropState.startCropY;
+                let newWidth = cropState.startCropWidth, newHeight = cropState.startCropHeight;
+
+                if (handle.includes('w')) {
+                    newX = Math.max(0, cropState.startCropX + deltaX);
+                    newWidth = cropState.startCropWidth - (newX - cropState.startCropX);
+                }
+                if (handle.includes('e')) {
+                    newWidth = Math.min(containerRect.width - cropState.startCropX, cropState.startCropWidth + deltaX);
+                }
+                if (handle.includes('n')) {
+                    newY = Math.max(0, cropState.startCropY + deltaY);
+                    newHeight = cropState.startCropHeight - (newY - cropState.startCropY);
+                }
+                if (handle.includes('s')) {
+                    newHeight = Math.min(containerRect.height - cropState.startCropY, cropState.startCropHeight + deltaY);
+                }
+
+                if (newWidth > 20 && newHeight > 20) {
+                    cropState.x = newX;
+                    cropState.y = newY;
+                    cropState.width = newWidth;
+                    cropState.height = newHeight;
+                    updateCropOverlay();
+                }
+            }
+        });
+
+        document.addEventListener('mouseup', function() {
+            cropState.isDragging = false;
+            cropState.isResizing = false;
+            cropState.dragHandle = null;
+        });
+
+        function downloadVisualization() {
+            const svg = document.getElementById('visualization');
+            const container = document.getElementById('visualization-container');
+            const svgData = new XMLSerializer().serializeToString(svg);
+            const filename = document.getElementById('filename').value || config.defaultFilename;
+            const format = document.getElementById('format').value;
+
+            if (format === 'svg') {
+                const blob = new Blob([svgData], { type: 'image/svg+xml' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `${filename}.svg`;
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                URL.revokeObjectURL(url);
+                return;
+            }
+
+            const canvas = document.createElement('canvas');
+            const ctx = canvas.getContext('2d');
+            const img = new Image();
+            const scaleFactor = parseInt(document.getElementById('scale').value);
+            const quality = parseFloat(document.getElementById('quality').value);
+            const rotation = parseFloat(document.getElementById('rotation').value);
+            const scaleTransform = parseFloat(document.getElementById('scale-transform').value) / 100;
+
+            let finalWidth = svg.width.baseVal.value;
+            let finalHeight = svg.height.baseVal.value;
+
+            if (cropState.enabled) {
+                const containerRect = container.getBoundingClientRect();
+                finalWidth = svg.width.baseVal.value * (cropState.width / containerRect.width);
+                finalHeight = svg.height.baseVal.value * (cropState.height / containerRect.height);
+            }
+
+            finalWidth *= scaleTransform;
+            finalHeight *= scaleTransform;
+
+            if (rotation === 90 || rotation === 270) {
+                [finalWidth, finalHeight] = [finalHeight, finalWidth];
+            }
+
+            canvas.width = finalWidth * scaleFactor;
+            canvas.height = finalHeight * scaleFactor;
+
+            img.onload = function() {
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                if (format === 'jpeg') {
+                    ctx.fillStyle = '#ffffff';
+                    ctx.fillRect(0, 0, canvas.width, canvas.height);
+                }
+
+                ctx.imageSmoothingEnabled = true;
+                ctx.imageSmoothingQuality = 'high';
+                ctx.save();
+                ctx.scale(scaleFactor, scaleFactor);
+                ctx.translate(finalWidth / 2, finalHeight / 2);
+                ctx.rotate((rotation * Math.PI) / 180);
+                ctx.scale(scaleTransform, scaleTransform);
+
+                let sourceX = 0, sourceY = 0, sourceWidth = svg.width.baseVal.value, sourceHeight = svg.height.baseVal.value;
+                let destWidth = sourceWidth, destHeight = sourceHeight;
+
+                if (cropState.enabled) {
+                    const containerRect = container.getBoundingClientRect();
+                    sourceX = (cropState.x / containerRect.width) * svg.width.baseVal.value;
+                    sourceY = (cropState.y / containerRect.height) * svg.height.baseVal.value;
+                    sourceWidth = (cropState.width / containerRect.width) * svg.width.baseVal.value;
+                    sourceHeight = (cropState.height / containerRect.height) * svg.height.baseVal.value;
+                    destWidth = sourceWidth;
+                    destHeight = sourceHeight;
+                }
+
+                ctx.drawImage(img, sourceX, sourceY, sourceWidth, sourceHeight, -destWidth/2, -destHeight/2, destWidth, destHeight);
+                ctx.restore();
+
+                const mimeType = format === 'png' ? 'image/png' : format === 'jpeg' ? 'image/jpeg' : 'image/webp';
+                canvas.toBlob(function(blob) {
+                    const url = URL.createObjectURL(blob);
+                    const a = document.createElement('a');
+                    a.href = url;
+                    a.download = `${filename}.${format}`;
+                    document.body.appendChild(a);
+                    a.click();
+                    document.body.removeChild(a);
+                    URL.revokeObjectURL(url);
+                }, mimeType, quality);
+            };
+
+            img.src = 'data:image/svg+xml;base64,' + btoa(unescape(encodeURIComponent(svgData)));
+        }
+
+        document.addEventListener('keydown', function(e) {
+            if ((e.ctrlKey || e.metaKey) && e.key === 's') {
+                e.preventDefault();
+                downloadVisualization();
+            }
+        });
+    </script>
+</body>
+</html>

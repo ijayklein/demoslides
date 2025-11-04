@@ -1,0 +1,43 @@
+# Generated visualization files
+*.html
+*.png
+*.svg
+*.svg.png
+
+# Keep the template and examples
+!visualization-template.html
+!examples/
+!examples/*.svg
+!examples/*.html
+
+# Keep regulation diagrams for GitHub Pages
+!regulation-expansion.html
+!regulation-consolidation.html
+
+# OS generated files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Editor directories and files
+.idea
+.vscode
+*.swp
+*.swo
+*~
+
+# Temporary files
+*.tmp
+*.temp
+*.log
+
+# Keep important markdown files
+!README.md
+!CLAUDE.md
+
+# Node.js dependencies
+node_modules/
