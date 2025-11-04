@@ -13,6 +13,31 @@
             min-height: 100vh;
         }
 
+        #home-btn {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            background: rgba(30, 41, 59, 0.95);
+            padding: 12px 20px;
+            border-radius: 8px;
+            text-decoration: none;
+            color: #ffffff;
+            font-weight: 500;
+            font-size: 14px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            z-index: 1001;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        #home-btn:hover {
+            background: rgba(59, 130, 246, 0.95);
+            transform: translateY(-2px);
+            box-shadow: 0 6px 12px rgba(59, 130, 246, 0.4);
+        }
+
         #controls {
             position: fixed;
             top: 20px;
@@ -137,6 +162,11 @@
     </style>
 </head>
 <body>
+    <a href="index.html" id="home-btn">
+        <span>←</span>
+        <span>Home</span>
+    </a>
+
     <div id="controls">
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
             <h3 style="margin: 0;">Export Options</h3>

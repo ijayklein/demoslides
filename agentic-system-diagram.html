@@ -1,0 +1,970 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <style>
+        body { 
+            margin: 0; 
+            padding: 20px; 
+            background: #0a0e27; 
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; 
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+        }
+        
+        #home-btn {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            background: rgba(30, 41, 59, 0.95);
+            padding: 12px 20px;
+            border-radius: 8px;
+            text-decoration: none;
+            color: #ffffff;
+            font-weight: 500;
+            font-size: 14px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            z-index: 1001;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        #home-btn:hover {
+            background: rgba(59, 130, 246, 0.95);
+            transform: translateY(-2px);
+            box-shadow: 0 6px 12px rgba(59, 130, 246, 0.4);
+        }
+
+        #controls {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: rgba(30, 41, 59, 0.95);
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            z-index: 1000;
+            min-width: 250px;
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+        
+        #crop-overlay {
+            position: absolute;
+            border: 2px dashed #3b82f6;
+            background: rgba(59, 130, 246, 0.1);
+            cursor: move;
+            display: none;
+            z-index: 100;
+        }
+        
+        .crop-handle {
+            position: absolute;
+            width: 10px;
+            height: 10px;
+            background: #3b82f6;
+            border: 2px solid white;
+            cursor: nw-resize;
+        }
+        
+        .crop-handle.nw { top: -6px; left: -6px; cursor: nw-resize; }
+        .crop-handle.ne { top: -6px; right: -6px; cursor: ne-resize; }
+        .crop-handle.sw { bottom: -6px; left: -6px; cursor: sw-resize; }
+        .crop-handle.se { bottom: -6px; right: -6px; cursor: se-resize; }
+        
+        #controls h3 {
+            margin: 0 0 15px 0;
+            color: #ffffff;
+            font-size: 16px;
+        }
+        
+        .control-group {
+            margin-bottom: 15px;
+        }
+        
+        .control-group label {
+            display: block;
+            color: #94a3b8;
+            font-size: 12px;
+            margin-bottom: 5px;
+        }
+        
+        .control-group select,
+        .control-group input {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #475569;
+            background: #1e293b;
+            color: #ffffff;
+            border-radius: 4px;
+            font-size: 14px;
+        }
+        
+        #download-btn {
+            width: 100%;
+            padding: 10px 20px;
+            background: #3b82f6;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 500;
+            transition: all 0.2s;
+        }
+        
+        #download-btn:hover { 
+            background: #2563eb; 
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(59, 130, 246, 0.4);
+        }
+        
+        #visualization-container {
+            background: #0a0e27;
+            border-radius: 8px;
+            box-shadow: 0 0 40px rgba(59, 130, 246, 0.2);
+            display: inline-block;
+            position: relative;
+            transform-origin: center;
+            transition: transform 0.2s ease;
+        }
+        
+        /* Theme variations */
+        body.light {
+            background: #f8fafc;
+        }
+        
+        body.light #visualization-container {
+            background: #ffffff;
+            box-shadow: 0 0 40px rgba(0, 0, 0, 0.1);
+        }
+        
+        body.light #controls {
+            background: rgba(255, 255, 255, 0.95);
+        }
+        
+        body.light #controls h3 {
+            color: #1e293b;
+        }
+        
+        body.light .control-group label {
+            color: #64748b;
+        }
+        
+        body.light .control-group select,
+        body.light .control-group input {
+            background: #f1f5f9;
+            color: #1e293b;
+            border-color: #e2e8f0;
+        }
+    </style>
+</head>
+<body>
+    <a href="index.html" id="home-btn">
+        <span>←</span>
+        <span>Home</span>
+    </a>
+
+    <div id="controls">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+            <h3 style="margin: 0;">Export Options</h3>
+            <button onclick="toggleControls()" style="background: none; border: 1px solid #475569; color: #94a3b8; padding: 4px 8px; border-radius: 4px; cursor: pointer; font-size: 12px;">
+                <span id="toggle-text">Hide</span>
+            </button>
+        </div>
+        <div id="controls-content">
+        
+        <div class="control-group">
+            <label for="filename">Filename</label>
+            <input type="text" id="filename" value="agentic-system" placeholder="Enter filename">
+        </div>
+        
+        <div class="control-group">
+            <label for="format">Format</label>
+            <select id="format">
+                <option value="png">PNG (Recommended)</option>
+                <option value="jpeg">JPEG</option>
+                <option value="webp">WebP</option>
+                <option value="svg">SVG (Vector)</option>
+            </select>
+        </div>
+        
+        <div class="control-group">
+            <label for="scale">Resolution Scale</label>
+            <select id="scale">
+                <option value="1">1x - Web (1200x800)</option>
+                <option value="2">2x - Retina (2400x1600)</option>
+                <option value="3" selected>3x - High DPI (3600x2400)</option>
+                <option value="4">4x - Print (4800x3200)</option>
+            </select>
+        </div>
+        
+        <div class="control-group">
+            <label for="quality">Quality (JPEG only)</label>
+            <input type="range" id="quality" min="0.1" max="1" step="0.1" value="0.9">
+            <small style="color: #64748b; font-size: 11px;">90%</small>
+        </div>
+        
+        <div class="control-group">
+            <label for="rotation">Rotation (degrees)</label>
+            <input type="range" id="rotation" min="0" max="360" step="1" value="0" oninput="updateRotation()">
+            <small style="color: #64748b; font-size: 11px;">0°</small>
+        </div>
+        
+        <div class="control-group">
+            <label for="scale-transform">Scale (%)</label>
+            <input type="range" id="scale-transform" min="25" max="200" step="5" value="100" oninput="updateScale()">
+            <small style="color: #64748b; font-size: 11px;">100%</small>
+        </div>
+        
+        <div class="control-group">
+            <button onclick="toggleCrop()" id="crop-btn" style="width: 100%; padding: 8px; background: #059669; color: white; border: none; border-radius: 4px; cursor: pointer; margin-bottom: 10px;">Enable Crop</button>
+            <button onclick="resetCrop()" style="width: 100%; padding: 8px; background: #dc2626; color: white; border: none; border-radius: 4px; cursor: pointer;">Reset Crop</button>
+        </div>
+        
+        <div class="control-group">
+            <label for="theme">Preview Theme</label>
+            <select id="theme" onchange="changeTheme()">
+                <option value="dark">Dark</option>
+                <option value="light">Light</option>
+            </select>
+        </div>
+        
+        <button id="download-btn" onclick="downloadVisualization()">Download</button>
+        </div>
+    </div>
+    
+    <div id="visualization-container">
+        <div id="crop-overlay">
+            <div class="crop-handle nw"></div>
+            <div class="crop-handle ne"></div>
+            <div class="crop-handle sw"></div>
+            <div class="crop-handle se"></div>
+        </div>
+        <svg id="visualization" width="1200" height="800" viewBox="0 0 1200 800" xmlns="http://www.w3.org/2000/svg">
+            <!-- Dark space background -->
+            <defs>
+                <!-- Gradients -->
+                <linearGradient id="bgGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                    <stop offset="0%" style="stop-color:#0a0e27;stop-opacity:1" />
+                    <stop offset="50%" style="stop-color:#1a1f3a;stop-opacity:1" />
+                    <stop offset="100%" style="stop-color:#0f1421;stop-opacity:1" />
+                </linearGradient>
+                
+                <!-- Layer 1 (Design/Architecture) - Blue gradients -->
+                <linearGradient id="layer1Bg" x1="0%" y1="0%" x2="100%" y2="100%">
+                    <stop offset="0%" style="stop-color:#1e3a8a;stop-opacity:0.1" />
+                    <stop offset="100%" style="stop-color:#3b82f6;stop-opacity:0.1" />
+                </linearGradient>
+                <linearGradient id="agent1Grad" x1="0%" y1="0%" x2="100%" y2="100%">
+                    <stop offset="0%" style="stop-color:#3b82f6;stop-opacity:1" />
+                    <stop offset="100%" style="stop-color:#1d4ed8;stop-opacity:1" />
+                </linearGradient>
+                
+                <!-- Layer 2 (Implementation) - Green gradients -->
+                <linearGradient id="layer2Bg" x1="0%" y1="0%" x2="100%" y2="100%">
+                    <stop offset="0%" style="stop-color:#064e3b;stop-opacity:0.1" />
+                    <stop offset="100%" style="stop-color:#059669;stop-opacity:0.1" />
+                </linearGradient>
+                <linearGradient id="agent2Grad" x1="0%" y1="0%" x2="100%" y2="100%">
+                    <stop offset="0%" style="stop-color:#10b981;stop-opacity:1" />
+                    <stop offset="100%" style="stop-color:#047857;stop-opacity:1" />
+                </linearGradient>
+                
+                <!-- Layer 3 (Execution/Runtime) - Orange gradients -->
+                <linearGradient id="layer3Bg" x1="0%" y1="0%" x2="100%" y2="100%">
+                    <stop offset="0%" style="stop-color:#9a3412;stop-opacity:0.1" />
+                    <stop offset="100%" style="stop-color:#ea580c;stop-opacity:0.1" />
+                </linearGradient>
+                <linearGradient id="agent3Grad" x1="0%" y1="0%" x2="100%" y2="100%">
+                    <stop offset="0%" style="stop-color:#f97316;stop-opacity:1" />
+                    <stop offset="100%" style="stop-color:#c2410c;stop-opacity:1" />
+                </linearGradient>
+                
+                <!-- Glow filters -->
+                <filter id="glow" x="-50%" y="-50%" width="200%" height="200%">
+                    <feGaussianBlur stdDeviation="3" result="coloredBlur"/>
+                    <feMerge> 
+                        <feMergeNode in="coloredBlur"/>
+                        <feMergeNode in="SourceGraphic"/>
+                    </feMerge>
+                </filter>
+                
+                <!-- Pulse animation -->
+                <animate id="layer1Pulse" attributeName="opacity" values="0.6;1;0.6" dur="6s" repeatCount="indefinite" begin="0s"/>
+                <animate id="layer2Pulse" attributeName="opacity" values="0.6;1;0.6" dur="6s" repeatCount="indefinite" begin="2s"/>
+                <animate id="layer3Pulse" attributeName="opacity" values="0.6;1;0.6" dur="6s" repeatCount="indefinite" begin="4s"/>
+            </defs>
+            
+            <!-- Background -->
+            <rect width="1200" height="800" fill="url(#bgGradient)"/>
+            
+            <!-- Title -->
+            <text x="600" y="40" font-family="Arial, sans-serif" font-size="24" font-weight="bold" text-anchor="middle" fill="#ffffff">3-Layer Agentic System Architecture</text>
+            
+            <!-- Layer 1: Design & Architecture (Blue) -->
+            <g id="layer1" opacity="0.6">
+                <animateTransform attributeName="opacity" values="0.6;1;0.6" dur="6s" repeatCount="indefinite" begin="0s"/>
+                
+                <!-- Layer background -->
+                <rect x="100" y="80" width="1000" height="180" fill="url(#layer1Bg)" stroke="#3b82f6" stroke-width="2" stroke-opacity="0.3" rx="15"/>
+                <text x="150" y="105" font-family="Arial, sans-serif" font-size="16" font-weight="bold" fill="#60a5fa">Layer 1: Design & Architecture</text>
+                
+                <!-- Orchestrator (top center) -->
+                <rect x="520" y="110" width="160" height="60" fill="url(#agent1Grad)" stroke="#1d4ed8" stroke-width="2" rx="10" filter="url(#glow)"/>
+                <text x="600" y="135" font-family="Arial, sans-serif" font-size="12" font-weight="bold" text-anchor="middle" fill="#ffffff">Design Orchestrator</text>
+                <text x="600" y="150" font-family="Arial, sans-serif" font-size="10" text-anchor="middle" fill="#bfdbfe">Coordinates Strategy</text>
+                
+                <!-- Agent-Engineer (left lower) -->
+                <rect x="250" y="200" width="160" height="60" fill="url(#agent1Grad)" stroke="#1d4ed8" stroke-width="2" rx="10" filter="url(#glow)"/>
+                <text x="330" y="225" font-family="Arial, sans-serif" font-size="12" font-weight="bold" text-anchor="middle" fill="#ffffff">Agent-Engineer</text>
+                <text x="330" y="240" font-family="Arial, sans-serif" font-size="10" text-anchor="middle" fill="#bfdbfe">Technical Specs</text>
+                
+                <!-- Agent-Product-Manager (center lower) -->
+                <rect x="520" y="200" width="160" height="60" fill="url(#agent1Grad)" stroke="#1d4ed8" stroke-width="2" rx="10" filter="url(#glow)"/>
+                <text x="600" y="225" font-family="Arial, sans-serif" font-size="12" font-weight="bold" text-anchor="middle" fill="#ffffff">Agent-Product-Mgr</text>
+                <text x="600" y="240" font-family="Arial, sans-serif" font-size="10" text-anchor="middle" fill="#bfdbfe">Requirements</text>
+                
+                <!-- Agent-Architect (right lower) -->
+                <rect x="790" y="200" width="160" height="60" fill="url(#agent1Grad)" stroke="#1d4ed8" stroke-width="2" rx="10" filter="url(#glow)"/>
+                <text x="870" y="225" font-family="Arial, sans-serif" font-size="12" font-weight="bold" text-anchor="middle" fill="#ffffff">Agent-Architect</text>
+                <text x="870" y="240" font-family="Arial, sans-serif" font-size="10" text-anchor="middle" fill="#bfdbfe">System Design</text>
+                
+                <!-- Layer 1 connections - Orthogonal paths only -->
+                <!-- Forward connections (Orchestrator to Agents) -->
+                <line x1="540" y1="170" x2="540" y2="185" stroke="#60a5fa" stroke-width="2" opacity="0.8"/>
+                <line x1="540" y1="185" x2="330" y2="185" stroke="#60a5fa" stroke-width="2" opacity="0.8"/>
+                <line x1="330" y1="185" x2="330" y2="200" stroke="#60a5fa" stroke-width="2" opacity="0.8"/>
+                
+                <line x1="600" y1="170" x2="600" y2="200" stroke="#60a5fa" stroke-width="2" opacity="0.8"/>
+                
+                <line x1="660" y1="170" x2="660" y2="185" stroke="#60a5fa" stroke-width="2" opacity="0.8"/>
+                <line x1="660" y1="185" x2="870" y2="185" stroke="#60a5fa" stroke-width="2" opacity="0.8"/>
+                <line x1="870" y1="185" x2="870" y2="200" stroke="#60a5fa" stroke-width="2" opacity="0.8"/>
+                
+                <!-- Return connections (Agents to Orchestrator) -->
+                <!-- Left block: exit left, go up, then right -->
+                <line x1="250" y1="230" x2="220" y2="230" stroke="#3b82f6" stroke-width="1" opacity="0.6" stroke-dasharray="3,3"/>
+                <line x1="220" y1="230" x2="220" y2="150" stroke="#3b82f6" stroke-width="1" opacity="0.6" stroke-dasharray="3,3"/>
+                <line x1="220" y1="150" x2="540" y2="150" stroke="#3b82f6" stroke-width="1" opacity="0.6" stroke-dasharray="3,3"/>
+                <line x1="540" y1="150" x2="540" y2="170" stroke="#3b82f6" stroke-width="1" opacity="0.6" stroke-dasharray="3,3"/>
+                
+                <!-- Center block: direct vertical -->
+                <line x1="590" y1="240" x2="590" y2="170" stroke="#3b82f6" stroke-width="1" opacity="0.6" stroke-dasharray="3,3"/>
+                
+                <!-- Right block: exit right, go up, then left -->
+                <line x1="950" y1="230" x2="980" y2="230" stroke="#3b82f6" stroke-width="1" opacity="0.6" stroke-dasharray="3,3"/>
+                <line x1="980" y1="230" x2="980" y2="150" stroke="#3b82f6" stroke-width="1" opacity="0.6" stroke-dasharray="3,3"/>
+                <line x1="980" y1="150" x2="660" y2="150" stroke="#3b82f6" stroke-width="1" opacity="0.6" stroke-dasharray="3,3"/>
+                <line x1="660" y1="150" x2="660" y2="170" stroke="#3b82f6" stroke-width="1" opacity="0.6" stroke-dasharray="3,3"/>
+                
+                <!-- Animated data flows - Orthogonal paths -->
+                <!-- Forward flows (Orchestrator to Agents) -->
+                <circle r="4" fill="#93c5fd">
+                    <animateMotion dur="3s" repeatCount="indefinite" begin="0s">
+                        <mpath href="#layer1Path1Forward"/>
+                    </animateMotion>
+                </circle>
+                <circle r="4" fill="#93c5fd">
+                    <animateMotion dur="2s" repeatCount="indefinite" begin="0.5s">
+                        <mpath href="#layer1Path2Forward"/>
+                    </animateMotion>
+                </circle>
+                <circle r="4" fill="#93c5fd">
+                    <animateMotion dur="3s" repeatCount="indefinite" begin="1s">
+                        <mpath href="#layer1Path3Forward"/>
+                    </animateMotion>
+                </circle>
+                <!-- Return flows (Agents to Orchestrator) -->
+                <circle r="3" fill="#60a5fa">
+                    <animateMotion dur="3s" repeatCount="indefinite" begin="1.5s">
+                        <mpath href="#layer1Path1Return"/>
+                    </animateMotion>
+                </circle>
+                <circle r="3" fill="#60a5fa">
+                    <animateMotion dur="2s" repeatCount="indefinite" begin="1.7s">
+                        <mpath href="#layer1Path2Return"/>
+                    </animateMotion>
+                </circle>
+                <circle r="3" fill="#60a5fa">
+                    <animateMotion dur="3s" repeatCount="indefinite" begin="1.9s">
+                        <mpath href="#layer1Path3Return"/>
+                    </animateMotion>
+                </circle>
+                <!-- Orthogonal path definitions -->
+                <path id="layer1Path1Forward" d="M540,170 L540,185 L330,185 L330,200" stroke="none" fill="none"/>
+                <path id="layer1Path2Forward" d="M600,170 L600,200" stroke="none" fill="none"/>
+                <path id="layer1Path3Forward" d="M660,170 L660,185 L870,185 L870,200" stroke="none" fill="none"/>
+                <path id="layer1Path1Return" d="M250,230 L220,230 L220,150 L540,150 L540,170" stroke="none" fill="none"/>
+                <path id="layer1Path2Return" d="M590,240 L590,170" stroke="none" fill="none"/>
+                <path id="layer1Path3Return" d="M950,230 L980,230 L980,150 L660,150 L660,170" stroke="none" fill="none"/>
+            </g>
+            
+            <!-- Layer 2: Implementation (Green) -->
+            <g id="layer2" opacity="0.6">
+                <animateTransform attributeName="opacity" values="0.6;1;0.6" dur="6s" repeatCount="indefinite" begin="2s"/>
+                
+                <!-- Layer background -->
+                <rect x="100" y="300" width="1000" height="180" fill="url(#layer2Bg)" stroke="#10b981" stroke-width="2" stroke-opacity="0.3" rx="15"/>
+                <text x="150" y="325" font-family="Arial, sans-serif" font-size="16" font-weight="bold" fill="#34d399">Layer 2: Implementation</text>
+                
+                <!-- Orchestrator (top center) -->
+                <rect x="520" y="330" width="160" height="60" fill="url(#agent2Grad)" stroke="#047857" stroke-width="2" rx="10" filter="url(#glow)"/>
+                <text x="600" y="355" font-family="Arial, sans-serif" font-size="12" font-weight="bold" text-anchor="middle" fill="#ffffff">Code Orchestrator</text>
+                <text x="600" y="370" font-family="Arial, sans-serif" font-size="10" text-anchor="middle" fill="#a7f3d0">Manages Development</text>
+                
+                <!-- UI/UX Agent (left lower) -->
+                <rect x="250" y="420" width="160" height="60" fill="url(#agent2Grad)" stroke="#047857" stroke-width="2" rx="10" filter="url(#glow)"/>
+                <text x="330" y="445" font-family="Arial, sans-serif" font-size="12" font-weight="bold" text-anchor="middle" fill="#ffffff">UI/UX Agent</text>
+                <text x="330" y="460" font-family="Arial, sans-serif" font-size="10" text-anchor="middle" fill="#a7f3d0">Frontend Code</text>
+                
+                <!-- Backend Agent (center lower) -->
+                <rect x="520" y="420" width="160" height="60" fill="url(#agent2Grad)" stroke="#047857" stroke-width="2" rx="10" filter="url(#glow)"/>
+                <text x="600" y="445" font-family="Arial, sans-serif" font-size="12" font-weight="bold" text-anchor="middle" fill="#ffffff">Backend Agent</text>
+                <text x="600" y="460" font-family="Arial, sans-serif" font-size="10" text-anchor="middle" fill="#a7f3d0">API & Services</text>
+                
+                <!-- Database Agent (right lower) -->
+                <rect x="790" y="420" width="160" height="60" fill="url(#agent2Grad)" stroke="#047857" stroke-width="2" rx="10" filter="url(#glow)"/>
+                <text x="870" y="445" font-family="Arial, sans-serif" font-size="12" font-weight="bold" text-anchor="middle" fill="#ffffff">Database Agent</text>
+                <text x="870" y="460" font-family="Arial, sans-serif" font-size="10" text-anchor="middle" fill="#a7f3d0">Data Layer</text>
+                
+                <!-- Layer 2 connections - Orthogonal paths only -->
+                <!-- Forward connections (Orchestrator to Agents) -->
+                <line x1="540" y1="390" x2="540" y2="405" stroke="#34d399" stroke-width="2" opacity="0.8"/>
+                <line x1="540" y1="405" x2="330" y2="405" stroke="#34d399" stroke-width="2" opacity="0.8"/>
+                <line x1="330" y1="405" x2="330" y2="420" stroke="#34d399" stroke-width="2" opacity="0.8"/>
+                
+                <line x1="600" y1="390" x2="600" y2="420" stroke="#34d399" stroke-width="2" opacity="0.8"/>
+                
+                <line x1="660" y1="390" x2="660" y2="405" stroke="#34d399" stroke-width="2" opacity="0.8"/>
+                <line x1="660" y1="405" x2="870" y2="405" stroke="#34d399" stroke-width="2" opacity="0.8"/>
+                <line x1="870" y1="405" x2="870" y2="420" stroke="#34d399" stroke-width="2" opacity="0.8"/>
+                
+                <!-- Return connections (Agents to Orchestrator) -->
+                <!-- Left block: exit left, go up, then right -->
+                <line x1="250" y1="450" x2="220" y2="450" stroke="#10b981" stroke-width="1" opacity="0.6" stroke-dasharray="3,3"/>
+                <line x1="220" y1="450" x2="220" y2="370" stroke="#10b981" stroke-width="1" opacity="0.6" stroke-dasharray="3,3"/>
+                <line x1="220" y1="370" x2="540" y2="370" stroke="#10b981" stroke-width="1" opacity="0.6" stroke-dasharray="3,3"/>
+                <line x1="540" y1="370" x2="540" y2="390" stroke="#10b981" stroke-width="1" opacity="0.6" stroke-dasharray="3,3"/>
+                
+                <!-- Center block: direct vertical -->
+                <line x1="590" y1="460" x2="590" y2="390" stroke="#10b981" stroke-width="1" opacity="0.6" stroke-dasharray="3,3"/>
+                
+                <!-- Right block: exit right, go up, then left -->
+                <line x1="950" y1="450" x2="980" y2="450" stroke="#10b981" stroke-width="1" opacity="0.6" stroke-dasharray="3,3"/>
+                <line x1="980" y1="450" x2="980" y2="370" stroke="#10b981" stroke-width="1" opacity="0.6" stroke-dasharray="3,3"/>
+                <line x1="980" y1="370" x2="660" y2="370" stroke="#10b981" stroke-width="1" opacity="0.6" stroke-dasharray="3,3"/>
+                <line x1="660" y1="370" x2="660" y2="390" stroke="#10b981" stroke-width="1" opacity="0.6" stroke-dasharray="3,3"/>
+                
+                <!-- Animated data flows - Orthogonal paths -->
+                <!-- Forward flows (Orchestrator to Agents) -->
+                <circle r="4" fill="#6ee7b7">
+                    <animateMotion dur="3s" repeatCount="indefinite" begin="2s">
+                        <mpath href="#layer2Path1Forward"/>
+                    </animateMotion>
+                </circle>
+                <circle r="4" fill="#6ee7b7">
+                    <animateMotion dur="2s" repeatCount="indefinite" begin="2.5s">
+                        <mpath href="#layer2Path2Forward"/>
+                    </animateMotion>
+                </circle>
+                <circle r="4" fill="#6ee7b7">
+                    <animateMotion dur="3s" repeatCount="indefinite" begin="3s">
+                        <mpath href="#layer2Path3Forward"/>
+                    </animateMotion>
+                </circle>
+                <!-- Return flows (Agents to Orchestrator) -->
+                <circle r="3" fill="#34d399">
+                    <animateMotion dur="3s" repeatCount="indefinite" begin="3.5s">
+                        <mpath href="#layer2Path1Return"/>
+                    </animateMotion>
+                </circle>
+                <circle r="3" fill="#34d399">
+                    <animateMotion dur="2s" repeatCount="indefinite" begin="3.7s">
+                        <mpath href="#layer2Path2Return"/>
+                    </animateMotion>
+                </circle>
+                <circle r="3" fill="#34d399">
+                    <animateMotion dur="3s" repeatCount="indefinite" begin="3.9s">
+                        <mpath href="#layer2Path3Return"/>
+                    </animateMotion>
+                </circle>
+                <!-- Orthogonal path definitions -->
+                <path id="layer2Path1Forward" d="M540,390 L540,405 L330,405 L330,420" stroke="none" fill="none"/>
+                <path id="layer2Path2Forward" d="M600,390 L600,420" stroke="none" fill="none"/>
+                <path id="layer2Path3Forward" d="M660,390 L660,405 L870,405 L870,420" stroke="none" fill="none"/>
+                <path id="layer2Path1Return" d="M250,450 L220,450 L220,370 L540,370 L540,390" stroke="none" fill="none"/>
+                <path id="layer2Path2Return" d="M590,460 L590,390" stroke="none" fill="none"/>
+                <path id="layer2Path3Return" d="M950,450 L980,450 L980,370 L660,370 L660,390" stroke="none" fill="none"/>
+            </g>
+            
+            <!-- Layer 3: Execution/Runtime (Orange) -->
+            <g id="layer3" opacity="0.6">
+                <animateTransform attributeName="opacity" values="0.6;1;0.6" dur="6s" repeatCount="indefinite" begin="4s"/>
+                
+                <!-- Layer background -->
+                <rect x="100" y="520" width="1000" height="180" fill="url(#layer3Bg)" stroke="#f97316" stroke-width="2" stroke-opacity="0.3" rx="15"/>
+                <text x="150" y="545" font-family="Arial, sans-serif" font-size="16" font-weight="bold" fill="#fb923c">Layer 3: Execution & Runtime</text>
+                
+                <!-- Orchestrator (top center) -->
+                <rect x="520" y="550" width="160" height="60" fill="url(#agent3Grad)" stroke="#c2410c" stroke-width="2" rx="10" filter="url(#glow)"/>
+                <text x="600" y="575" font-family="Arial, sans-serif" font-size="12" font-weight="bold" text-anchor="middle" fill="#ffffff">Runtime Orchestrator</text>
+                <text x="600" y="590" font-family="Arial, sans-serif" font-size="10" text-anchor="middle" fill="#fed7aa">Controls Operations</text>
+                
+                <!-- Web Search Agent (left lower) -->
+                <rect x="250" y="640" width="160" height="60" fill="url(#agent3Grad)" stroke="#c2410c" stroke-width="2" rx="10" filter="url(#glow)"/>
+                <text x="330" y="665" font-family="Arial, sans-serif" font-size="12" font-weight="bold" text-anchor="middle" fill="#ffffff">Web Search Agent</text>
+                <text x="330" y="680" font-family="Arial, sans-serif" font-size="10" text-anchor="middle" fill="#fed7aa">Real-time Search</text>
+                
+                <!-- Monitoring Agent (center lower) -->
+                <rect x="520" y="640" width="160" height="60" fill="url(#agent3Grad)" stroke="#c2410c" stroke-width="2" rx="10" filter="url(#glow)"/>
+                <text x="600" y="665" font-family="Arial, sans-serif" font-size="12" font-weight="bold" text-anchor="middle" fill="#ffffff">Monitoring Agent</text>
+                <text x="600" y="680" font-family="Arial, sans-serif" font-size="10" text-anchor="middle" fill="#fed7aa">System Health</text>
+                
+                <!-- User Interaction Agent (right lower) -->
+                <rect x="790" y="640" width="160" height="60" fill="url(#agent3Grad)" stroke="#c2410c" stroke-width="2" rx="10" filter="url(#glow)"/>
+                <text x="870" y="665" font-family="Arial, sans-serif" font-size="12" font-weight="bold" text-anchor="middle" fill="#ffffff">User Agent</text>
+                <text x="870" y="680" font-family="Arial, sans-serif" font-size="10" text-anchor="middle" fill="#fed7aa">Interaction Handler</text>
+                
+                <!-- Layer 3 connections - Orthogonal paths only -->
+                <!-- Forward connections (Orchestrator to Agents) -->
+                <line x1="540" y1="610" x2="540" y2="625" stroke="#fb923c" stroke-width="2" opacity="0.8"/>
+                <line x1="540" y1="625" x2="330" y2="625" stroke="#fb923c" stroke-width="2" opacity="0.8"/>
+                <line x1="330" y1="625" x2="330" y2="640" stroke="#fb923c" stroke-width="2" opacity="0.8"/>
+                
+                <line x1="600" y1="610" x2="600" y2="640" stroke="#fb923c" stroke-width="2" opacity="0.8"/>
+                
+                <line x1="660" y1="610" x2="660" y2="625" stroke="#fb923c" stroke-width="2" opacity="0.8"/>
+                <line x1="660" y1="625" x2="870" y2="625" stroke="#fb923c" stroke-width="2" opacity="0.8"/>
+                <line x1="870" y1="625" x2="870" y2="640" stroke="#fb923c" stroke-width="2" opacity="0.8"/>
+                
+                <!-- Return connections (Agents to Orchestrator) -->
+                <!-- Left block: exit left, go up, then right -->
+                <line x1="250" y1="670" x2="220" y2="670" stroke="#f97316" stroke-width="1" opacity="0.6" stroke-dasharray="3,3"/>
+                <line x1="220" y1="670" x2="220" y2="590" stroke="#f97316" stroke-width="1" opacity="0.6" stroke-dasharray="3,3"/>
+                <line x1="220" y1="590" x2="540" y2="590" stroke="#f97316" stroke-width="1" opacity="0.6" stroke-dasharray="3,3"/>
+                <line x1="540" y1="590" x2="540" y2="610" stroke="#f97316" stroke-width="1" opacity="0.6" stroke-dasharray="3,3"/>
+                
+                <!-- Center block: direct vertical -->
+                <line x1="590" y1="680" x2="590" y2="610" stroke="#f97316" stroke-width="1" opacity="0.6" stroke-dasharray="3,3"/>
+                
+                <!-- Right block: exit right, go up, then left -->
+                <line x1="950" y1="670" x2="980" y2="670" stroke="#f97316" stroke-width="1" opacity="0.6" stroke-dasharray="3,3"/>
+                <line x1="980" y1="670" x2="980" y2="590" stroke="#f97316" stroke-width="1" opacity="0.6" stroke-dasharray="3,3"/>
+                <line x1="980" y1="590" x2="660" y2="590" stroke="#f97316" stroke-width="1" opacity="0.6" stroke-dasharray="3,3"/>
+                <line x1="660" y1="590" x2="660" y2="610" stroke="#f97316" stroke-width="1" opacity="0.6" stroke-dasharray="3,3"/>
+                
+                <!-- Animated data flows - Orthogonal paths -->
+                <!-- Forward flows (Orchestrator to Agents) -->
+                <circle r="4" fill="#fdba74">
+                    <animateMotion dur="3s" repeatCount="indefinite" begin="4s">
+                        <mpath href="#layer3Path1Forward"/>
+                    </animateMotion>
+                </circle>
+                <circle r="4" fill="#fdba74">
+                    <animateMotion dur="2s" repeatCount="indefinite" begin="4.5s">
+                        <mpath href="#layer3Path2Forward"/>
+                    </animateMotion>
+                </circle>
+                <circle r="4" fill="#fdba74">
+                    <animateMotion dur="3s" repeatCount="indefinite" begin="5s">
+                        <mpath href="#layer3Path3Forward"/>
+                    </animateMotion>
+                </circle>
+                <!-- Return flows (Agents to Orchestrator) -->
+                <circle r="3" fill="#fb923c">
+                    <animateMotion dur="3s" repeatCount="indefinite" begin="5.5s">
+                        <mpath href="#layer3Path1Return"/>
+                    </animateMotion>
+                </circle>
+                <circle r="3" fill="#fb923c">
+                    <animateMotion dur="2s" repeatCount="indefinite" begin="5.7s">
+                        <mpath href="#layer3Path2Return"/>
+                    </animateMotion>
+                </circle>
+                <circle r="3" fill="#fb923c">
+                    <animateMotion dur="3s" repeatCount="indefinite" begin="5.9s">
+                        <mpath href="#layer3Path3Return"/>
+                    </animateMotion>
+                </circle>
+                <!-- Orthogonal path definitions -->
+                <path id="layer3Path1Forward" d="M540,610 L540,625 L330,625 L330,640" stroke="none" fill="none"/>
+                <path id="layer3Path2Forward" d="M600,610 L600,640" stroke="none" fill="none"/>
+                <path id="layer3Path3Forward" d="M660,610 L660,625 L870,625 L870,640" stroke="none" fill="none"/>
+                <path id="layer3Path1Return" d="M250,670 L220,670 L220,590 L540,590 L540,610" stroke="none" fill="none"/>
+                <path id="layer3Path2Return" d="M590,680 L590,610" stroke="none" fill="none"/>
+                <path id="layer3Path3Return" d="M950,670 L980,670 L980,590 L660,590 L660,610" stroke="none" fill="none"/>
+            </g>
+            
+            
+            <!-- Arrow marker definitions -->
+            <defs>
+                <marker id="arrowhead" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+                    <polygon points="0 0, 10 3.5, 0 7" fill="#94a3b8"/>
+                </marker>
+                <!-- Blue arrowheads for Layer 1 -->
+                <marker id="arrowhead-blue" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto">
+                    <polygon points="0 0, 8 3, 0 6" fill="#60a5fa"/>
+                </marker>
+                <marker id="arrowhead-blue-small" markerWidth="6" markerHeight="4" refX="5" refY="2" orient="auto">
+                    <polygon points="0 0, 6 2, 0 4" fill="#3b82f6"/>
+                </marker>
+                <!-- Green arrowheads for Layer 2 -->
+                <marker id="arrowhead-green" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto">
+                    <polygon points="0 0, 8 3, 0 6" fill="#34d399"/>
+                </marker>
+                <marker id="arrowhead-green-small" markerWidth="6" markerHeight="4" refX="5" refY="2" orient="auto">
+                    <polygon points="0 0, 6 2, 0 4" fill="#10b981"/>
+                </marker>
+                <!-- Orange arrowheads for Layer 3 -->
+                <marker id="arrowhead-orange" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto">
+                    <polygon points="0 0, 8 3, 0 6" fill="#fb923c"/>
+                </marker>
+                <marker id="arrowhead-orange-small" markerWidth="6" markerHeight="4" refX="5" refY="2" orient="auto">
+                    <polygon points="0 0, 6 2, 0 4" fill="#f97316"/>
+                </marker>
+            </defs>
+            
+            <!-- Legend -->
+            <g transform="translate(950, 720)">
+                <text x="0" y="0" font-family="Arial, sans-serif" font-size="12" font-weight="bold" fill="#ffffff">Legend:</text>
+                <circle cx="10" cy="20" r="4" fill="#93c5fd"/>
+                <text x="20" y="25" font-family="Arial, sans-serif" font-size="10" fill="#94a3b8">Design Flow</text>
+                <circle cx="10" cy="40" r="4" fill="#6ee7b7"/>
+                <text x="20" y="45" font-family="Arial, sans-serif" font-size="10" fill="#94a3b8">Code Flow</text>
+                <circle cx="10" cy="60" r="4" fill="#fdba74"/>
+                <text x="20" y="65" font-family="Arial, sans-serif" font-size="10" fill="#94a3b8">Runtime Flow</text>
+            </g>
+        </svg>
+    </div>
+
+    <script>
+        // Configuration
+        const config = {
+            defaultFilename: 'agentic-system',
+            defaultFormat: 'png',
+            defaultScale: 3,
+            defaultQuality: 0.9
+        };
+        
+        // Toggle controls visibility
+        function toggleControls() {
+            const content = document.getElementById('controls-content');
+            const toggleText = document.getElementById('toggle-text');
+            const controls = document.getElementById('controls');
+            
+            if (content.style.display === 'none') {
+                content.style.display = 'block';
+                toggleText.textContent = 'Hide';
+                controls.style.minWidth = '250px';
+            } else {
+                content.style.display = 'none';
+                toggleText.textContent = 'Show';
+                controls.style.minWidth = 'auto';
+            }
+        }
+        
+        // Crop state
+        let cropState = {
+            enabled: false,
+            x: 0,
+            y: 0,
+            width: 0,
+            height: 0,
+            isDragging: false,
+            isResizing: false,
+            dragHandle: null
+        };
+        
+        // Update quality label
+        document.getElementById('quality').addEventListener('input', function(e) {
+            const label = e.target.nextElementSibling;
+            label.textContent = Math.round(e.target.value * 100) + '%';
+        });
+        
+        // Update rotation
+        function updateRotation() {
+            const rotation = document.getElementById('rotation').value;
+            document.getElementById('rotation').nextElementSibling.textContent = rotation + '°';
+            const container = document.getElementById('visualization-container');
+            updateTransform();
+        }
+        
+        // Update scale
+        function updateScale() {
+            const scale = document.getElementById('scale-transform').value;
+            document.getElementById('scale-transform').nextElementSibling.textContent = scale + '%';
+            updateTransform();
+        }
+        
+        // Update transform
+        function updateTransform() {
+            const rotation = document.getElementById('rotation').value;
+            const scale = document.getElementById('scale-transform').value / 100;
+            const container = document.getElementById('visualization-container');
+            container.style.transform = `rotate(${rotation}deg) scale(${scale})`;
+        }
+        
+        // Theme switcher
+        function changeTheme() {
+            const theme = document.getElementById('theme').value;
+            document.body.className = theme;
+        }
+        
+        // Crop functionality
+        function toggleCrop() {
+            const overlay = document.getElementById('crop-overlay');
+            const btn = document.getElementById('crop-btn');
+            
+            if (!cropState.enabled) {
+                cropState.enabled = true;
+                overlay.style.display = 'block';
+                btn.textContent = 'Disable Crop';
+                btn.style.background = '#dc2626';
+                initializeCrop();
+            } else {
+                cropState.enabled = false;
+                overlay.style.display = 'none';
+                btn.textContent = 'Enable Crop';
+                btn.style.background = '#059669';
+            }
+        }
+        
+        function initializeCrop() {
+            const container = document.getElementById('visualization-container');
+            const overlay = document.getElementById('crop-overlay');
+            const rect = container.getBoundingClientRect();
+            
+            // Set initial crop to center 50% of the image
+            const width = rect.width * 0.5;
+            const height = rect.height * 0.5;
+            const x = (rect.width - width) / 2;
+            const y = (rect.height - height) / 2;
+            
+            cropState.x = x;
+            cropState.y = y;
+            cropState.width = width;
+            cropState.height = height;
+            
+            updateCropOverlay();
+        }
+        
+        function updateCropOverlay() {
+            const overlay = document.getElementById('crop-overlay');
+            overlay.style.left = cropState.x + 'px';
+            overlay.style.top = cropState.y + 'px';
+            overlay.style.width = cropState.width + 'px';
+            overlay.style.height = cropState.height + 'px';
+        }
+        
+        function resetCrop() {
+            if (cropState.enabled) {
+                initializeCrop();
+            }
+        }
+        
+        // Mouse events for crop
+        document.getElementById('crop-overlay').addEventListener('mousedown', function(e) {
+            if (e.target.classList.contains('crop-handle')) {
+                cropState.isResizing = true;
+                cropState.dragHandle = e.target.classList[1]; // nw, ne, sw, se
+            } else {
+                cropState.isDragging = true;
+            }
+            cropState.startX = e.clientX;
+            cropState.startY = e.clientY;
+            cropState.startCropX = cropState.x;
+            cropState.startCropY = cropState.y;
+            cropState.startCropWidth = cropState.width;
+            cropState.startCropHeight = cropState.height;
+            e.preventDefault();
+        });
+        
+        document.addEventListener('mousemove', function(e) {
+            if (!cropState.enabled) return;
+            
+            const deltaX = e.clientX - cropState.startX;
+            const deltaY = e.clientY - cropState.startY;
+            const container = document.getElementById('visualization-container');
+            const containerRect = container.getBoundingClientRect();
+            
+            if (cropState.isDragging) {
+                cropState.x = Math.max(0, Math.min(containerRect.width - cropState.width, cropState.startCropX + deltaX));
+                cropState.y = Math.max(0, Math.min(containerRect.height - cropState.height, cropState.startCropY + deltaY));
+                updateCropOverlay();
+            } else if (cropState.isResizing) {
+                const handle = cropState.dragHandle;
+                let newX = cropState.startCropX;
+                let newY = cropState.startCropY;
+                let newWidth = cropState.startCropWidth;
+                let newHeight = cropState.startCropHeight;
+                
+                if (handle.includes('w')) { // west
+                    newX = Math.max(0, cropState.startCropX + deltaX);
+                    newWidth = cropState.startCropWidth - (newX - cropState.startCropX);
+                }
+                if (handle.includes('e')) { // east
+                    newWidth = Math.min(containerRect.width - cropState.startCropX, cropState.startCropWidth + deltaX);
+                }
+                if (handle.includes('n')) { // north
+                    newY = Math.max(0, cropState.startCropY + deltaY);
+                    newHeight = cropState.startCropHeight - (newY - cropState.startCropY);
+                }
+                if (handle.includes('s')) { // south
+                    newHeight = Math.min(containerRect.height - cropState.startCropY, cropState.startCropHeight + deltaY);
+                }
+                
+                if (newWidth > 20 && newHeight > 20) {
+                    cropState.x = newX;
+                    cropState.y = newY;
+                    cropState.width = newWidth;
+                    cropState.height = newHeight;
+                    updateCropOverlay();
+                }
+            }
+        });
+        
+        document.addEventListener('mouseup', function(e) {
+            cropState.isDragging = false;
+            cropState.isResizing = false;
+            cropState.dragHandle = null;
+        });
+        
+        // Main download function
+        function downloadVisualization() {
+            const svg = document.getElementById('visualization');
+            const container = document.getElementById('visualization-container');
+            const svgData = new XMLSerializer().serializeToString(svg);
+            
+            // Get user options
+            const filename = document.getElementById('filename').value || config.defaultFilename;
+            const format = document.getElementById('format').value;
+            
+            // Handle SVG download separately
+            if (format === 'svg') {
+                const blob = new Blob([svgData], { type: 'image/svg+xml' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `${filename}.svg`;
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                URL.revokeObjectURL(url);
+                return;
+            }
+            
+            // Continue with raster format export
+            const canvas = document.createElement('canvas');
+            const ctx = canvas.getContext('2d');
+            const img = new Image();
+            const scaleFactor = parseInt(document.getElementById('scale').value);
+            const quality = parseFloat(document.getElementById('quality').value);
+            const rotation = parseFloat(document.getElementById('rotation').value);
+            const scaleTransform = parseFloat(document.getElementById('scale-transform').value) / 100;
+            
+            // Calculate final dimensions
+            let finalWidth = svg.width.baseVal.value;
+            let finalHeight = svg.height.baseVal.value;
+            
+            if (cropState.enabled) {
+                // Calculate crop ratios
+                const containerRect = container.getBoundingClientRect();
+                const cropRatioX = cropState.x / containerRect.width;
+                const cropRatioY = cropState.y / containerRect.height;
+                const cropRatioWidth = cropState.width / containerRect.width;
+                const cropRatioHeight = cropState.height / containerRect.height;
+                
+                finalWidth = svg.width.baseVal.value * cropRatioWidth;
+                finalHeight = svg.height.baseVal.value * cropRatioHeight;
+            }
+            
+            // Apply transforms to canvas size
+            finalWidth *= scaleTransform;
+            finalHeight *= scaleTransform;
+            
+            // Handle rotation - swap dimensions if needed
+            if (rotation === 90 || rotation === 270) {
+                [finalWidth, finalHeight] = [finalHeight, finalWidth];
+            }
+            
+            // Set canvas dimensions
+            canvas.width = finalWidth * scaleFactor;
+            canvas.height = finalHeight * scaleFactor;
+            
+            img.onload = function() {
+                // Clear and prepare canvas
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                
+                // Set background for JPEG (doesn't support transparency)
+                if (format === 'jpeg') {
+                    ctx.fillStyle = '#ffffff';
+                    ctx.fillRect(0, 0, canvas.width, canvas.height);
+                }
+                
+                // Enable image smoothing
+                ctx.imageSmoothingEnabled = true;
+                ctx.imageSmoothingQuality = 'high';
+                
+                // Apply transformations
+                ctx.save();
+                ctx.scale(scaleFactor, scaleFactor);
+                
+                // Move to center for rotation
+                ctx.translate(finalWidth / 2, finalHeight / 2);
+                ctx.rotate((rotation * Math.PI) / 180);
+                ctx.scale(scaleTransform, scaleTransform);
+                
+                // Calculate source and destination for cropping
+                let sourceX = 0, sourceY = 0, sourceWidth = svg.width.baseVal.value, sourceHeight = svg.height.baseVal.value;
+                let destWidth = sourceWidth, destHeight = sourceHeight;
+                
+                if (cropState.enabled) {
+                    const containerRect = container.getBoundingClientRect();
+                    sourceX = (cropState.x / containerRect.width) * svg.width.baseVal.value;
+                    sourceY = (cropState.y / containerRect.height) * svg.height.baseVal.value;
+                    sourceWidth = (cropState.width / containerRect.width) * svg.width.baseVal.value;
+                    sourceHeight = (cropState.height / containerRect.height) * svg.height.baseVal.value;
+                    destWidth = sourceWidth;
+                    destHeight = sourceHeight;
+                }
+                
+                // Draw the image (centered due to translate)
+                ctx.drawImage(img, sourceX, sourceY, sourceWidth, sourceHeight, -destWidth/2, -destHeight/2, destWidth, destHeight);
+                
+                ctx.restore();
+                
+                // Convert to blob and download
+                const mimeType = format === 'png' ? 'image/png' : 
+                               format === 'jpeg' ? 'image/jpeg' : 
+                               'image/webp';
+                
+                canvas.toBlob(function(blob) {
+                    const url = URL.createObjectURL(blob);
+                    const a = document.createElement('a');
+                    a.href = url;
+                    a.download = `${filename}.${format}`;
+                    document.body.appendChild(a);
+                    a.click();
+                    document.body.removeChild(a);
+                    URL.revokeObjectURL(url);
+                }, mimeType, quality);
+            };
+            
+            // Load the SVG as an image
+            img.src = 'data:image/svg+xml;base64,' + btoa(unescape(encodeURIComponent(svgData)));
+        }
+        
+        // Keyboard shortcut
+        document.addEventListener('keydown', function(e) {
+            if ((e.ctrlKey || e.metaKey) && e.key === 's') {
+                e.preventDefault();
+                downloadVisualization();
+            }
+        });
+    </script>
+</body>
+</html>
